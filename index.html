@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Genz Chama - Working Sync</title>
+    <title>Genz Chama - Admin Controlled</title>
     <style>
         * {
             margin: 0;
@@ -39,7 +39,7 @@
             padding: 25px;
             border-radius: 24px;
             width: 100%;
-            max-width: 450px;
+            max-width: 400px;
             text-align: center;
             max-height: 90vh;
             overflow-y: auto;
@@ -204,15 +204,6 @@
         .error-text {
             color: #dc2626;
         }
-
-        .instruction-box {
-            background: #fef3c7;
-            padding: 12px;
-            border-radius: 12px;
-            margin-top: 12px;
-            text-align: left;
-            font-size: 11px;
-        }
     </style>
 </head>
 
@@ -220,216 +211,255 @@
 
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
-            <!-- CSV URL Box -->
-            <div class="csv-url-box">
-                <h4>📊 GOOGLE SHEET CSV LINK</h4>
-                <input type="text" id="csvUrl" placeholder="Paste your CSV link here" style="font-size: 12px;">
-                <div class="flex-buttons">
-                    <button onclick="saveCsvUrl()" style="background: #0284c7; padding: 8px;">💾 Save URL</button>
-                    <button onclick="testCsvUrl()" class="secondary" style="padding: 8px;">🔍 Test Link</button>
-                </div>
-                <div id="urlStatus" class="small-text" style="margin-top: 8px;"></div>
-
-            </div>
-
             <div class="login-tabs">
-                <button class="tab-btn active" onclick="showMemberTab()">👤 Member</button>
-                <button class="tab-btn" onclick="showAdminTab()">👑 Admin</button>
+                <button class="tab-btn active" onclick="showMemberLogin()">👤 Member Login</button>
+                <button class="tab-btn" onclick="showAdminLogin()">👑 Admin Login</button>
             </div>
 
-            <div id="memberTab">
-                <h3>Member Login</h3>
+            <!-- Member Login Panel (NO CSV box here) -->
+            <div id="memberLoginPanel">
+                <h3>Member Access</h3>
                 <select id="memberSelect">
-                    <option value="">-- Select Name --</option>
+                    <option value="">-- Select Your Name --</option>
                 </select>
-                <input type="password" id="memberPin" placeholder="Passcode (last 4 digits of phone)">
+                <input type="password" id="memberPasscode" placeholder="Enter your passcode">
                 <button onclick="memberLogin()">Login</button>
+                <p class="small-text">Use last 4 digits of your phone number as passcode</p>
             </div>
 
-            <div id="adminTab" style="display:none">
-                <h3>Admin Login</h3>
-                <input type="password" id="adminPwd" placeholder="Admin password">
+            <!-- Admin Login Panel (CSV box appears ONLY after admin login) -->
+            <div id="adminLoginPanel" style="display:none">
+                <h3>Admin Access</h3>
+                <input type="password" id="adminPasswordInput" placeholder="Admin password">
                 <button onclick="adminLogin()">Login</button>
             </div>
         </div>
     </div>
 
+    <!-- Member View -->
     <div id="memberView" style="display:none">
         <div class="card" style="text-align:center">
             <h1>💰 Genz Chama</h1>
-            <p>Member Portal</p>
+            <p>Member Portal - View Only</p>
         </div>
-        <div id="memberInfo" class="card"></div>
+        <div id="memberInfoPanel" class="member-info"></div>
         <div class="card">
-            <h2>🎡 Weekly MGR</h2>
-            <div id="memberMgr" class="winner">Loading...</div>
+            <h2>🎡 Weekly MGR (250 KES)</h2>
+            <div id="mgrWinnerMember" class="winner">Loading...</div>
+            <p id="weekInfoMember" class="small-text"></p>
         </div>
         <div class="card">
             <h2>🏦 My Savings</h2>
-            <div id="memberSavings" style="font-size:28px; font-weight:bold; text-align:center">0 KES</div>
-            <div id="memberSavingsList" class="small-text"></div>
+            <div class="stats-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="stat-card" style="background:#f8fafc; padding:15px; border-radius:16px; text-align:center;">
+                    <div class="stat-label" style="font-size:12px; color:#64748b;">Total Saved</div>
+                    <div class="stat-value" id="memberSavingsDisplay" style="font-size:24px; font-weight:bold;">0 KES
+                    </div>
+                </div>
+                <div class="stat-card" style="background:#f8fafc; padding:15px; border-radius:16px; text-align:center;">
+                    <div class="stat-label" style="font-size:12px; color:#64748b;">Loan Balance</div>
+                    <div class="stat-value loan" id="memberLoanDisplay"
+                        style="font-size:24px; font-weight:bold; color:#dc2626;">0 KES</div>
+                </div>
+            </div>
+            <div id="savingsHistoryMember" class="small-text"></div>
         </div>
         <div class="card">
-            <h2>📋 My Loans</h2>
-            <div id="memberLoan" style="font-size:28px; font-weight:bold; text-align:center; color:#dc2626">0 KES</div>
-            <div id="memberLoansList"></div>
+            <h2>📋 My Loans <span class="badge">10% Interest</span></h2>
+            <div id="loanHistoryMember"></div>
         </div>
-        <button onclick="logout()" class="secondary" style="width:100%">🚪 Logout</button>
+        <div class="card">
+            <button onclick="logout()" class="secondary" style="width:100%">🚪 Logout</button>
+        </div>
     </div>
 
+    <!-- Admin View (CSV box appears ONLY here - members never see this) -->
     <div id="adminView" style="display:none">
-        <div class="card" style="text-align:center">
-            <span class="admin-badge">👑 ADMIN MODE</span>
+        <div class="admin-badge">👑 Admin Mode - Full Control</div>
+        <div class="header">
             <h1>💰 Genz Chama</h1>
+            <p>Admin Control Panel</p>
         </div>
 
+        <!-- CSV SYNC SECTION - ADMIN ONLY -->
         <div class="card">
-            <h2>🔄 Sync with Google Sheet</h2>
-            <div id="syncStatus" class="sync-status">📡 Ready to sync</div>
-            <div class="flex-buttons">
-                <button onclick="syncFromSheet()" class="sync">📥 Sync Now</button>
+            <div class="csv-url-box">
+                <h4>📊 GOOGLE SHEET CSV SYNC (Admin Only)</h4>
+                <input type="text" id="csvUrlInput" placeholder="Paste your CSV link here" style="font-size: 12px;">
+                <div class="flex-buttons">
+                    <button onclick="saveSheetUrl()" style="background: #0284c7;">💾 Save URL</button>
+                    <button onclick="pullFromSheet()" class="sync">📥 Sync from Sheet</button>
+                </div>
+                <div id="syncStatusMsg" class="sync-status" style="margin-top: 10px;">📡 Ready to sync</div>
+                <p class="small-text">Get CSV link: File → Share → Publish to web → CSV → Copy link</p>
             </div>
-            <div id="lastSyncInfo" class="small-text" style="margin-top:5px"></div>
         </div>
 
+        <!-- Member Passcodes Management -->
         <div class="card">
-            <h2>👥 Members</h2>
-            <div id="membersList"></div><button onclick="addNewMember()" class="secondary small">➕ Add Member</button>
+            <h2>🔐 Member Passcodes</h2>
+            <div id="passcodesList"></div>
+            <button onclick="resetMemberPasscodes()" class="secondary small">Reset All Passcodes</button>
+            <p class="small-text">Each member's passcode = last 4 digits of their phone number</p>
         </div>
+
+        <!-- MGR Section -->
         <div class="card">
-            <h2>🎡 Weekly MGR</h2>
-            <div id="adminMgr" class="winner">Loading...</div>
-            <div class="flex-buttons"><button onclick="recordMgr()">✅ Record Payout</button><button onclick="nextWeek()"
-                    class="secondary">⏩ Next Week</button></div>
+            <h2>🎡 Weekly MGR (250 KES)</h2>
+            <div id="mgrWinnerAdmin" class="winner">Loading...</div>
+            <button onclick="recordMGR()">✅ Record This Week's Payout</button>
+            <button onclick="nextWeek()" class="secondary">⏩ Move to Next Week</button>
+            <p id="weekInfoAdmin" class="small-text"></p>
         </div>
+
+        <!-- Savings Section -->
         <div class="card">
-            <h2>🏦 Add Savings</h2><select id="savingsMember">
+            <h2>🏦 Add Savings</h2>
+            <select id="savingsMemberSelect">
                 <option value="">-- Select Member --</option>
-            </select><input type="date" id="savingsDate"><input type="number" id="savingsAmount"
-                placeholder="Amount KES"><button onclick="addSavings()">➕ Add Savings</button>
+            </select>
+            <input type="date" id="savingsDate">
+            <input type="number" id="savingsAmount" placeholder="Amount in KES">
+            <button onclick="addSavings()">➕ Add Savings</button>
+            <div id="savingsDisplay"></div>
         </div>
+
+        <!-- Loans Section -->
         <div class="card">
-            <h2>📋 Loans (10% Interest)</h2><select id="loanMember">
+            <h2>📋 Loans <span class="badge">+10% Interest</span></h2>
+            <select id="loanMemberSelect">
                 <option value="">-- Select Member --</option>
-            </select><input type="date" id="loanDate"><input type="number" id="loanPrincipal"
-                placeholder="Principal KES"><input type="date" id="loanReturnDate"><button onclick="takeLoan()">📥 Take
-                Loan</button>
-            <hr><input type="number" id="repayAmount" placeholder="Repayment"><button onclick="repayLoan()"
-                class="secondary">💰 Repay</button>
+            </select>
+            <input type="date" id="loanDateTaken">
+            <input type="number" id="loanPrincipal" placeholder="Principal Amount">
+            <input type="date" id="loanReturnDate" placeholder="Expected Return Date">
+            <button onclick="takeLoan()">📥 Take Loan (+10% Interest)</button>
+            <hr>
+            <h3>Record Repayment</h3>
+            <input type="number" id="repayAmount" placeholder="Repayment Amount">
+            <button onclick="repayLoan()" class="secondary">💰 Record Repayment</button>
+            <div id="loanDisplay"></div>
         </div>
+
+        <!-- Members Summary -->
         <div class="card">
-            <h2>📊 Member Summary</h2>
-            <div id="adminSummary"></div>
-            <div class="total">💰 Total Savings: <span id="totalSavings">0</span> KES</div><button
-                onclick="changeAdminPassword()" class="secondary small">🔑 Change Password</button><button
-                onclick="resetAllData()" class="danger small">⚠️ Reset All</button><button onclick="logout()"
-                class="secondary small">🚪 Logout</button>
+            <h2>👥 Member Records</h2>
+            <div id="memberSummary"></div>
+            <div class="total">💰 Total Group Savings: <span id="totalSavings">0</span> KES</div>
+            <hr>
+            <button onclick="resetAllData()" class="danger">⚠️ Reset All Data</button>
+            <button onclick="changeAdminPassword()" class="secondary">🔑 Change Admin Password</button>
+            <button onclick="logout()" class="secondary">🚪 Logout</button>
         </div>
     </div>
 
     <script>
-        // Member data
-        let members = [
+        // ============ MEMBER LIST ============
+        let MEMBERS = [
             { id: 0, name: "Brian Odhiambo", phone: "0718585462", passcode: "5462" },
             { id: 1, name: "Calvin Onyango", phone: "0769618871", passcode: "8871" },
             { id: 2, name: "Collins Odhiambo", phone: "0792257622", passcode: "7622" },
-            { id: 3, name: "Morgan Omondi", phone: "04180238", passcode: "0238" },
+            { id: 3, name: "Morgan Omondi", phone: "4180238", passcode: "0238" },
             { id: 4, name: "Samuel Ochieng", phone: "0759856838", passcode: "6838" },
             { id: 5, name: "Ivy", phone: "0769263349", passcode: "3349" },
-            { id: 6, name: "Ongoma", phone: "0712345678", passcode: "0000" }
+            { id: 6, name: "Ongoma", phone: "", passcode: "0000" }
         ];
 
+        // ============ APP STATE ============
         let savings = [];
-        let loans = [
-            { id: 1, memberId: 0, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-02-16", status: "returned", dateTaken: "2026-02-11", paid: 550 },
-            { id: 2, memberId: 3, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-03-06", status: "returned", dateTaken: "2026-02-20", paid: 550 },
-            { id: 4, memberId: 3, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-03-22", status: "pending", dateTaken: "2025-03-08", paid: 0 }
-        ];
+        let loans = [];
+        let mgrWeekIndex = 0;
+        let mgrLastPaidWeek = null;
+        let nextLoanId = 1;
+        let isAdminMode = false;
+        let currentMemberId = null;
+        let ADMIN_PASSWORD = "admin123";
+        let GOOGLE_SHEET_CSV_URL = localStorage.getItem("GenzSheetCsvUrl") || "";
 
-        let mgrIndex = 0;
-        let mgrLastPaid = null;
-        let adminPassword = "admin123";
-        let nextLoanId = 5;
-        let csvUrl = localStorage.getItem("chamaWorkingCsvUrl") || "";
-
-        let isAdmin = false;
-        let currentMember = null;
-
-        function getWeekKey() {
-            let now = new Date(), year = now.getFullYear(), start = new Date(year, 0, 1);
-            let days = Math.floor((now - start) / 86400000);
-            return `${year}-W${Math.ceil((days + start.getDay() + 1) / 7)}`;
+        // ============ HELPER FUNCTIONS ============
+        function getCurrentWeekKey() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const start = new Date(year, 0, 1);
+            const days = Math.floor((now - start) / (24 * 60 * 60 * 1000));
+            const week = Math.ceil((days + start.getDay() + 1) / 7);
+            return `${year}-W${week}`;
         }
-        function isMgrPaid() { return mgrLastPaid === getWeekKey(); }
-        function getMemberSavings(id) { return savings.filter(s => s.memberId === id).reduce((a, b) => a + b.amount, 0); }
-        function getMemberLoanBalance(id) { return loans.filter(l => l.memberId === id && l.status !== 'returned').reduce((a, b) => a + (b.totalDue - (b.paid || 0)), 0); }
-        function totalSavings() { return savings.reduce((a, b) => a + b.amount, 0); }
 
+        function isMGRPaidThisWeek() { return mgrLastPaidWeek === getCurrentWeekKey(); }
+        function getMemberSavings(memberId) { return savings.filter(s => s.memberId === memberId).reduce((sum, s) => sum + s.amount, 0); }
+        function getMemberLoanBalance(memberId) {
+            let balance = 0;
+            for (let loan of loans) {
+                if (loan.memberId === memberId && loan.status !== 'returned') {
+                    balance += loan.totalDue - (loan.repaidAmount || 0);
+                }
+            }
+            return balance;
+        }
+        function getMemberLoans(memberId) { return loans.filter(l => l.memberId === memberId); }
+        function getMemberSavingsHistory(memberId) { return savings.filter(s => s.memberId === memberId).sort((a, b) => new Date(b.date) - new Date(a.date)); }
+        function getTotalGroupSavings() { return savings.reduce((sum, s) => sum + s.amount, 0); }
+
+        // ============ DATA PERSISTENCE ============
         function saveData() {
-            localStorage.setItem("chamaWorkingData", JSON.stringify({ members, savings, loans, mgrIndex, mgrLastPaid, adminPassword, nextLoanId }));
+            const data = { savings, loans, mgrWeekIndex, mgrLastPaidWeek, nextLoanId, adminPassword: ADMIN_PASSWORD };
+            localStorage.setItem("GenzChamaData", JSON.stringify(data));
         }
 
         function loadData() {
-            let d = localStorage.getItem("chamaWorkingData");
-            if (d) {
+            const saved = localStorage.getItem("GenzChamaData");
+            if (saved) {
                 try {
-                    let p = JSON.parse(d);
-                    members = p.members || members;
-                    savings = p.savings || savings;
-                    loans = p.loans || loans;
-                    mgrIndex = p.mgrIndex !== undefined ? p.mgrIndex : mgrIndex;
-                    mgrLastPaid = p.mgrLastPaid || null;
-                    if (p.adminPassword) adminPassword = p.adminPassword;
-                    if (p.nextLoanId) nextLoanId = p.nextLoanId;
-                } catch (e) { }
+                    const data = JSON.parse(saved);
+                    savings = data.savings || [];
+                    loans = data.loans || [];
+                    mgrWeekIndex = data.mgrWeekIndex || 0;
+                    mgrLastPaidWeek = data.mgrLastPaidWeek || null;
+                    nextLoanId = data.nextLoanId || 1;
+                    if (data.adminPassword) ADMIN_PASSWORD = data.adminPassword;
+                } catch (e) { console.log("Error loading data"); }
             }
-            saveData();
+
+            // Load sample data if empty
+            if (loans.length === 0) {
+                loans = [
+                    { id: 1, memberId: 0, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-02-16", status: "returned", dateTaken: "2026-02-11", repaidAmount: 550 },
+                    { id: 2, memberId: 3, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-03-06", status: "returned", dateTaken: "2026-02-20", repaidAmount: 550 },
+                    { id: 4, memberId: 3, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-03-22", status: "pending", dateTaken: "2025-03-08", repaidAmount: 0 }
+                ];
+                nextLoanId = 5;
+                savings = [
+                    { date: "2025-08-16", memberId: 0, amount: 3170 },
+                    { date: "2026-04-18", memberId: 1, amount: 100 },
+                    { date: "2026-04-20", memberId: 0, amount: 850 }
+                ];
+                saveData();
+            }
         }
 
-        function saveCsvUrl() {
-            let url = document.getElementById("csvUrl").value.trim();
-            if (url && url.includes("docs.google.com")) {
-                csvUrl = url;
-                localStorage.setItem("chamaWorkingCsvUrl", url);
-                document.getElementById("urlStatus").innerHTML = "✅ URL saved! Tap 'Sync Now' to import data.";
-                document.getElementById("urlStatus").className = "small-text success-text";
+        // ============ GOOGLE SHEET SYNC (ADMIN ONLY) ============
+        function saveSheetUrl() {
+            const url = document.getElementById("csvUrlInput").value.trim();
+            if (url) {
+                GOOGLE_SHEET_CSV_URL = url;
+                localStorage.setItem("GenzSheetCsvUrl", url);
+                document.getElementById("syncStatusMsg").innerHTML = "✅ URL saved! Tap 'Sync from Sheet' to import.";
+                document.getElementById("syncStatusMsg").style.background = "#d1fae5";
             } else {
-                document.getElementById("urlStatus").innerHTML = "❌ Invalid URL. Must contain 'docs.google.com'";
-                document.getElementById("urlStatus").className = "small-text error-text";
+                alert("Please paste a valid CSV link");
             }
         }
 
-        async function testCsvUrl() {
-            let url = document.getElementById("csvUrl").value.trim();
-            if (!url) { alert("Paste CSV link first"); return; }
-            document.getElementById("urlStatus").innerHTML = "🔍 Testing...";
-            try {
-                let response = await fetch(url);
-                if (response.ok) {
-                    let text = await response.text();
-                    let lines = text.split('\n');
-                    document.getElementById("urlStatus").innerHTML = `✅ Link works! Found ${lines.length} lines. Tap 'Sync Now'.`;
-                    document.getElementById("urlStatus").className = "small-text success-text";
-                } else {
-                    throw new Error("HTTP " + response.status);
-                }
-            } catch (error) {
-                document.getElementById("urlStatus").innerHTML = "❌ Failed: " + error.message;
-                document.getElementById("urlStatus").className = "small-text error-text";
-            }
-        }
-
-        async function syncFromSheet() {
-            if (!csvUrl) {
-                alert("Please paste your CSV link and click 'Save URL' first.");
+        async function pullFromSheet() {
+            if (!GOOGLE_SHEET_CSV_URL) {
+                alert("Please paste your Google Sheet CSV URL and click 'Save URL' first.");
                 return;
             }
-
-            document.getElementById("syncStatus").innerHTML = "🔄 Fetching from Google Sheet...";
-            document.getElementById("syncStatus").style.background = "#fef3c7";
-
+            document.getElementById("syncStatusMsg").innerHTML = "🔄 Syncing from Google Sheet...";
+            document.getElementById("syncStatusMsg").style.background = "#fef3c7";
             try {
-                let response = await fetch(csvUrl);
+                let response = await fetch(GOOGLE_SHEET_CSV_URL);
                 let text = await response.text();
                 let lines = text.split('\n');
 
@@ -440,7 +470,6 @@
                     let row = parseCSVLine(line);
                     if (row.length < 3) continue;
 
-                    // Skip header row (Date, Member Name, Amount)
                     if (!headerSkipped && (row[0].toLowerCase() === "date" || row[0].toLowerCase() === "date")) {
                         headerSkipped = true;
                         continue;
@@ -450,12 +479,9 @@
                     let memberName = row[1];
                     let amount = parseFloat(row[2]);
 
-                    // Check if this looks like a valid row
                     if (date && memberName && !isNaN(amount) && amount > 0) {
-                        // Find member ID by name
                         let memberId = findMemberIdByName(memberName);
                         if (memberId !== -1) {
-                            // Format date if needed
                             if (date.includes('/')) {
                                 let parts = date.split('/');
                                 if (parts.length === 3) {
@@ -470,30 +496,17 @@
                 if (newSavings.length > 0) {
                     savings = newSavings;
                     saveData();
-                    document.getElementById("syncStatus").innerHTML = `✅ Success! Imported ${savings.length} savings records.`;
-                    document.getElementById("syncStatus").style.background = "#d1fae5";
-                    document.getElementById("lastSyncInfo").innerHTML = `Last sync: ${new Date().toLocaleString()}`;
-                    refreshAdmin();
+                    document.getElementById("syncStatusMsg").innerHTML = `✅ Sync successful! Imported ${savings.length} savings records.`;
+                    document.getElementById("syncStatusMsg").style.background = "#d1fae5";
+                    refreshAdminView();
                 } else {
-                    document.getElementById("syncStatus").innerHTML = "⚠️ No savings found. Make sure your sheet has: Column A = Date, Column B = Member Name, Column C = Amount";
-                    document.getElementById("syncStatus").style.background = "#fee2e2";
+                    document.getElementById("syncStatusMsg").innerHTML = "⚠️ No savings found. Make sure columns: Date, Member Name, Amount";
+                    document.getElementById("syncStatusMsg").style.background = "#fee2e2";
                 }
-
             } catch (error) {
-                document.getElementById("syncStatus").innerHTML = "❌ Sync failed: " + error.message;
-                document.getElementById("syncStatus").style.background = "#fee2e2";
+                document.getElementById("syncStatusMsg").innerHTML = "❌ Sync failed: " + error.message;
+                document.getElementById("syncStatusMsg").style.background = "#fee2e2";
             }
-        }
-
-        function findMemberIdByName(name) {
-            if (!name) return -1;
-            let searchName = name.toLowerCase().trim();
-            for (let m of members) {
-                if (m.name.toLowerCase() === searchName) return m.id;
-                if (searchName.includes(m.name.toLowerCase().split(' ')[0])) return m.id;
-                if (m.name.toLowerCase().includes(searchName.split(' ')[0])) return m.id;
-            }
-            return -1;
         }
 
         function parseCSVLine(line) {
@@ -508,182 +521,264 @@
             return result;
         }
 
-        function refreshAdmin() {
-            let opts = '<option value="">-- Select Member --</option>';
-            for (let m of members) opts += `<option value="${m.id}">${m.name}</option>`;
-            document.getElementById("savingsMember").innerHTML = opts;
-            document.getElementById("loanMember").innerHTML = opts;
-
-            let membersHtml = '';
-            for (let m of members) membersHtml += `<div class="member-row"><div><strong>${m.name}</strong><br><span class="small-text">📱 ${m.phone} | 🔑 ${m.passcode}</span></div><button onclick="editMember(${m.id})" class="small secondary">Edit</button></div>`;
-            document.getElementById("membersList").innerHTML = membersHtml;
-
-            let summaryHtml = '';
-            for (let m of members) summaryHtml += `<div class="member-row"><div><strong>${m.name}</strong></div><div>💰 ${getMemberSavings(m.id)} KES<br>📌 ${getMemberLoanBalance(m.id)} KES</div></div>`;
-            document.getElementById("adminSummary").innerHTML = summaryHtml;
-            document.getElementById("totalSavings").innerText = totalSavings();
-
-            let winner = members[mgrIndex]?.name || "?";
-            document.getElementById("adminMgr").innerHTML = `🏆 ${winner}<br><span class="small-text">${isMgrPaid() ? "✅ Recorded" : "❌ Not recorded"}</span>`;
-
-            let loginOpts = '<option value="">-- Select Name --</option>';
-            for (let m of members) loginOpts += `<option value="${m.id}">${m.name}</option>`;
-            document.getElementById("memberSelect").innerHTML = loginOpts;
-        }
-
-        function refreshMemberView() {
-            if (!currentMember) return;
-            let saved = getMemberSavings(currentMember.id);
-            let loanBal = getMemberLoanBalance(currentMember.id);
-            document.getElementById("memberInfo").innerHTML = `<h3>${currentMember.name}</h3><p>📱 ${currentMember.phone}</p>`;
-            document.getElementById("memberSavings").innerHTML = `${saved} KES`;
-            document.getElementById("memberLoan").innerHTML = `${loanBal} KES`;
-            document.getElementById("memberSavingsList").innerHTML = savings.filter(s => s.memberId === currentMember.id).slice(-5).map(s => `📆 ${s.date}: +${s.amount} KES`).join('<br>') || "No savings";
-            document.getElementById("memberLoansList").innerHTML = loans.filter(l => l.memberId === currentMember.id).map(l => `<div style="background:#f8fafc; padding:8px; margin-bottom:6px; border-radius:12px">📆 ${l.dateTaken}<br>${l.principal} + 10% = ${l.totalDue} KES<br>Due: ${l.returnDate}<br>${l.status === 'returned' ? '✅ Paid' : '⚠️ Pending'}</div>`).join('') || "No loans";
-            let isWinner = mgrIndex === currentMember.id;
-            document.getElementById("memberMgr").innerHTML = `${isWinner ? '🎉 YOU ARE THE WINNER! 🎉' : `Winner: ${members[mgrIndex]?.name}`}<br><span class="small-text">${isMgrPaid() ? "Paid" : "Not paid"}</span>`;
-        }
-
-        function editMember(id) {
-            let m = members[id];
-            let newName = prompt("New name:", m.name);
-            let newPhone = prompt("New phone:", m.phone);
-            if (newName) m.name = newName;
-            if (newPhone) { m.phone = newPhone; m.passcode = newPhone.slice(-4); }
-            saveData();
-            refreshAdmin();
-        }
-
-        function addNewMember() {
-            let name = prompt("Member name:");
-            if (!name) return;
-            let phone = prompt("Phone number:");
-            members.push({ id: members.length, name: name, phone: phone || "", passcode: phone ? phone.slice(-4) : "0000" });
-            saveData();
-            refreshAdmin();
-        }
-
-        function addSavings() {
-            let mid = parseInt(document.getElementById("savingsMember").value);
-            let amt = parseFloat(document.getElementById("savingsAmount").value);
-            let date = document.getElementById("savingsDate").value;
-            if (isNaN(mid)) { alert("Select member"); return; }
-            if (isNaN(amt) || amt <= 0) { alert("Valid amount"); return; }
-            if (!date) { alert("Select date"); return; }
-            savings.push({ date, memberId: mid, amount: amt });
-            saveData();
-            refreshAdmin();
-            document.getElementById("savingsAmount").value = "";
-            alert(`✅ Added ${amt} KES`);
-        }
-
-        function takeLoan() {
-            let mid = parseInt(document.getElementById("loanMember").value);
-            let princ = parseFloat(document.getElementById("loanPrincipal").value);
-            let retDate = document.getElementById("loanReturnDate").value;
-            let taken = document.getElementById("loanDate").value;
-            if (isNaN(mid)) { alert("Select member"); return; }
-            if (isNaN(princ) || princ <= 0) { alert("Valid principal"); return; }
-            let interest = princ * 0.10;
-            loans.push({ id: nextLoanId++, memberId: mid, principal: princ, interest: interest, totalDue: princ + interest, returnDate: retDate, status: "pending", dateTaken: taken, paid: 0 });
-            saveData();
-            refreshAdmin();
-            alert(`📥 Loan: ${princ} + 10% = ${princ + interest} KES`);
-            document.getElementById("loanPrincipal").value = "";
-            document.getElementById("loanReturnDate").value = "";
-            document.getElementById("loanDate").value = "";
-        }
-
-        function repayLoan() {
-            let mid = parseInt(document.getElementById("loanMember").value);
-            let amt = parseFloat(document.getElementById("repayAmount").value);
-            if (isNaN(mid)) { alert("Select member"); return; }
-            let pending = loans.filter(l => l.memberId === mid && l.status === "pending");
-            if (pending.length === 0) { alert("No pending loans"); return; }
-            let remaining = amt;
-            for (let l of pending) {
-                let owing = l.totalDue - (l.paid || 0);
-                if (remaining <= 0) break;
-                if (remaining >= owing) { l.paid = l.totalDue; l.status = "returned"; remaining -= owing; }
-                else { l.paid = (l.paid || 0) + remaining; remaining = 0; }
+        function findMemberIdByName(name) {
+            if (!name) return -1;
+            let searchName = name.toLowerCase().trim();
+            for (let m of MEMBERS) {
+                if (m.name.toLowerCase() === searchName) return m.id;
+                if (searchName.includes(m.name.toLowerCase().split(' ')[0])) return m.id;
+                if (m.name.toLowerCase().includes(searchName.split(' ')[0])) return m.id;
             }
-            saveData();
-            refreshAdmin();
-            alert(`💰 Repayment of ${amt} KES recorded`);
-            document.getElementById("repayAmount").value = "";
+            return -1;
         }
 
-        function recordMgr() {
-            if (isMgrPaid()) { alert("Already recorded"); return; }
-            mgrLastPaid = getWeekKey();
-            saveData();
-            refreshAdmin();
-            alert(`✅ Recorded 250 KES to ${members[mgrIndex].name}`);
-        }
-
-        function nextWeek() {
-            mgrIndex = (mgrIndex + 1) % members.length;
-            mgrLastPaid = null;
-            saveData();
-            refreshAdmin();
-            alert(`Next winner: ${members[mgrIndex].name}`);
-        }
-
-        function changeAdminPassword() {
-            let np = prompt("New admin password:", adminPassword);
-            if (np && np.length >= 4) { adminPassword = np; saveData(); alert("Password changed!"); }
-        }
-
-        function resetAllData() {
-            if (confirm("⚠️ ERASE ALL DATA?")) { localStorage.removeItem("chamaWorkingData"); location.reload(); }
-        }
-
-        function memberLogin() {
-            let id = parseInt(document.getElementById("memberSelect").value);
-            let pin = document.getElementById("memberPin").value;
-            if (isNaN(id)) { alert("Select name"); return; }
-            if (members[id].passcode === pin) {
-                currentMember = members[id];
-                document.getElementById("loginOverlay").style.display = "none";
-                document.getElementById("memberView").style.display = "block";
-                refreshMemberView();
-            } else alert("Wrong passcode!");
-        }
-
-        function adminLogin() {
-            if (document.getElementById("adminPwd").value === adminPassword) {
-                isAdmin = true;
-                document.getElementById("loginOverlay").style.display = "none";
-                document.getElementById("adminView").style.display = "block";
-                if (csvUrl) document.getElementById("csvUrl").value = csvUrl;
-                refreshAdmin();
-            } else alert("Wrong password!");
-        }
-
-        function logout() {
-            document.getElementById("memberView").style.display = "none";
-            document.getElementById("adminView").style.display = "none";
-            document.getElementById("loginOverlay").style.display = "flex";
-            currentMember = null;
-        }
-
-        function showMemberTab() {
-            document.getElementById("memberTab").style.display = "block";
-            document.getElementById("adminTab").style.display = "none";
+        // ============ AUTHENTICATION ============
+        function showMemberLogin() {
+            document.getElementById("memberLoginPanel").style.display = "block";
+            document.getElementById("adminLoginPanel").style.display = "none";
             document.querySelectorAll(".tab-btn")[0].classList.add("active");
             document.querySelectorAll(".tab-btn")[1].classList.remove("active");
         }
 
-        function showAdminTab() {
-            document.getElementById("memberTab").style.display = "none";
-            document.getElementById("adminTab").style.display = "block";
+        function showAdminLogin() {
+            document.getElementById("memberLoginPanel").style.display = "none";
+            document.getElementById("adminLoginPanel").style.display = "block";
             document.querySelectorAll(".tab-btn")[0].classList.remove("active");
             document.querySelectorAll(".tab-btn")[1].classList.add("active");
         }
 
-        loadData();
-        refreshAdmin();
-        if (csvUrl) document.getElementById("csvUrl").value = csvUrl;
+        function memberLogin() {
+            const memberId = parseInt(document.getElementById("memberSelect").value);
+            const passcode = document.getElementById("memberPasscode").value;
+            if (isNaN(memberId)) { alert("Please select your name"); return; }
+            const member = MEMBERS[memberId];
+            if (member.passcode === passcode) {
+                currentMemberId = memberId;
+                isAdminMode = false;
+                document.getElementById("loginOverlay").style.display = "none";
+                document.getElementById("memberView").style.display = "block";
+                refreshMemberView();
+            } else {
+                alert("Wrong passcode! Use last 4 digits of your phone number.");
+            }
+        }
+
+        function adminLogin() {
+            const pwd = document.getElementById("adminPasswordInput").value;
+            if (pwd === ADMIN_PASSWORD) {
+                isAdminMode = true;
+                document.getElementById("loginOverlay").style.display = "none";
+                document.getElementById("adminView").style.display = "block";
+                if (GOOGLE_SHEET_CSV_URL) document.getElementById("csvUrlInput").value = GOOGLE_SHEET_CSV_URL;
+                refreshAdminView();
+            } else {
+                alert("Wrong admin password!");
+            }
+        }
+
+        function logout() {
+            isAdminMode = false;
+            currentMemberId = null;
+            document.getElementById("memberView").style.display = "none";
+            document.getElementById("adminView").style.display = "none";
+            document.getElementById("loginOverlay").style.display = "flex";
+            document.getElementById("memberPasscode").value = "";
+            document.getElementById("adminPasswordInput").value = "";
+            document.getElementById("memberSelect").value = "";
+        }
+
+        // ============ ADMIN FUNCTIONS ============
+        function updateMemberSelects() {
+            const savingsSelect = document.getElementById("savingsMemberSelect");
+            const loanSelect = document.getElementById("loanMemberSelect");
+            let options = '<option value="">-- Select Member --</option>';
+            for (let m of MEMBERS) options += `<option value="${m.id}">${m.name}</option>`;
+            if (savingsSelect) savingsSelect.innerHTML = options;
+            if (loanSelect) loanSelect.innerHTML = options;
+        }
+
+        function displayPasscodesList() {
+            let html = '<div style="margin: 10px 0">';
+            for (let m of MEMBERS) {
+                html += `<div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #e2e8f0;">
+                <span><strong>${m.name}</strong></span>
+                <span>🔑 Passcode: <strong>${m.passcode}</strong></span>
+                <button class="small" onclick="changeMemberPasscode(${m.id})">Change</button>
+            </div>`;
+            }
+            html += '</div>';
+            document.getElementById("passcodesList").innerHTML = html;
+        }
+
+        function changeMemberPasscode(memberId) {
+            const newPasscode = prompt(`Enter new 4-digit passcode for ${MEMBERS[memberId].name}:`, MEMBERS[memberId].passcode);
+            if (newPasscode && newPasscode.length >= 4) {
+                MEMBERS[memberId].passcode = newPasscode.slice(0, 4);
+                saveData();
+                displayPasscodesList();
+                alert(`Passcode changed to ${newPasscode.slice(0, 4)}`);
+            }
+        }
+
+        function resetMemberPasscodes() {
+            if (confirm("Reset all passcodes to default (last 4 digits of phone number)?")) {
+                for (let m of MEMBERS) {
+                    m.passcode = m.phone ? m.phone.slice(-4) : "0000";
+                }
+                saveData();
+                displayPasscodesList();
+                alert("All passcodes reset");
+            }
+        }
+
+        function addSavings() {
+            const memberId = parseInt(document.getElementById("savingsMemberSelect").value);
+            const amount = parseFloat(document.getElementById("savingsAmount").value);
+            const date = document.getElementById("savingsDate").value;
+            if (isNaN(memberId)) { alert("Select a member"); return; }
+            if (isNaN(amount) || amount <= 0) { alert("Enter valid amount"); return; }
+            if (!date) { alert("Select date"); return; }
+            savings.push({ date, memberId, amount });
+            saveData();
+            refreshAdminView();
+            document.getElementById("savingsAmount").value = "";
+            alert(`✅ Added ${amount} KES to ${MEMBERS[memberId].name}`);
+        }
+
+        function takeLoan() {
+            const memberId = parseInt(document.getElementById("loanMemberSelect").value);
+            const principal = parseFloat(document.getElementById("loanPrincipal").value);
+            const returnDate = document.getElementById("loanReturnDate").value;
+            const dateTaken = document.getElementById("loanDateTaken").value;
+            if (isNaN(memberId)) { alert("Select a member"); return; }
+            if (isNaN(principal) || principal <= 0) { alert("Enter valid principal"); return; }
+            if (!returnDate) { alert("Select return date"); return; }
+            const interest = principal * 0.10;
+            const totalDue = principal + interest;
+            loans.push({ id: nextLoanId++, memberId, principal, interest, totalDue, returnDate, status: "pending", dateTaken, repaidAmount: 0 });
+            saveData();
+            refreshAdminView();
+            alert(`📥 Loan: ${principal} + 10% = ${totalDue} KES due by ${returnDate}`);
+            document.getElementById("loanPrincipal").value = "";
+            document.getElementById("loanReturnDate").value = "";
+            document.getElementById("loanDateTaken").value = "";
+        }
+
+        function repayLoan() {
+            const memberId = parseInt(document.getElementById("loanMemberSelect").value);
+            const amount = parseFloat(document.getElementById("repayAmount").value);
+            if (isNaN(memberId)) { alert("Select a member"); return; }
+            if (isNaN(amount) || amount <= 0) { alert("Enter valid repayment amount"); return; }
+            const pendingLoans = loans.filter(l => l.memberId === memberId && l.status === "pending").sort((a, b) => new Date(a.returnDate) - new Date(b.returnDate));
+            if (pendingLoans.length === 0) { alert("No outstanding loans"); return; }
+            let remaining = amount;
+            for (let loan of pendingLoans) {
+                const outstanding = loan.totalDue - (loan.repaidAmount || 0);
+                if (remaining <= 0) break;
+                if (remaining >= outstanding) { loan.repaidAmount = loan.totalDue; loan.status = "returned"; remaining -= outstanding; }
+                else { loan.repaidAmount = (loan.repaidAmount || 0) + remaining; remaining = 0; }
+            }
+            saveData();
+            refreshAdminView();
+            alert(`💰 Repayment of ${amount} KES recorded`);
+            document.getElementById("repayAmount").value = "";
+        }
+
+        function recordMGR() {
+            if (isMGRPaidThisWeek()) { alert("Already recorded this week!"); return; }
+            mgrLastPaidWeek = getCurrentWeekKey();
+            saveData();
+            refreshAdminView();
+            alert(`✅ Recorded 250 KES paid to ${MEMBERS[mgrWeekIndex].name}`);
+        }
+
+        function nextWeek() {
+            mgrWeekIndex = (mgrWeekIndex + 1) % MEMBERS.length;
+            mgrLastPaidWeek = null;
+            saveData();
+            refreshAdminView();
+            alert(`New week started! Next winner: ${MEMBERS[mgrWeekIndex].name}`);
+        }
+
+        function changeAdminPassword() {
+            const newPwd = prompt("Enter new admin password:", ADMIN_PASSWORD);
+            if (newPwd && newPwd.length >= 4) { ADMIN_PASSWORD = newPwd; saveData(); alert("Password changed!"); }
+            else if (newPwd) alert("Password must be at least 4 characters");
+        }
+
+        function resetAllData() {
+            if (confirm("⚠️ ERASE ALL savings, loans, and MGR history?")) {
+                savings = []; loans = []; mgrWeekIndex = 0; mgrLastPaidWeek = null; nextLoanId = 1;
+                saveData();
+                refreshAdminView();
+                alert("All data reset");
+            }
+        }
+
+        // ============ ADMIN DISPLAY ============
+        function refreshAdminView() {
+            updateMemberSelects();
+            displayPasscodesList();
+
+            let summaryHtml = '';
+            for (let m of MEMBERS) {
+                summaryHtml += `<div style="display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #e2e8f0;">
+                <div><strong>${m.name}</strong><div style="font-size:12px; color:#64748b">📞 ${m.phone || '—'}</div></div>
+                <div style="text-align:right">💰 ${getMemberSavings(m.id)} KES<br>📌 ${getMemberLoanBalance(m.id)} KES</div>
+            </div>`;
+            }
+            document.getElementById("memberSummary").innerHTML = summaryHtml;
+            document.getElementById("totalSavings").innerText = getTotalGroupSavings();
+
+            let loanHtml = '<h3>📜 Loan History</h3>';
+            for (let loan of loans) {
+                const member = MEMBERS[loan.memberId];
+                const outstanding = loan.totalDue - (loan.repaidAmount || 0);
+                loanHtml += `<div style="background:#f8fafc; padding:10px; border-radius:12px; margin-bottom:8px">
+                <strong>${member.name}</strong> | ${loan.dateTaken}<br>${loan.principal}+10% = ${loan.totalDue} KES | Due: ${loan.returnDate}<br>${loan.status === 'returned' ? '✅ Returned' : `⚠️ Pending (${outstanding} KES left)`}</div>`;
+            }
+            document.getElementById("loanDisplay").innerHTML = loanHtml;
+
+            const winner = MEMBERS[mgrWeekIndex];
+            document.getElementById("mgrWinnerAdmin").innerHTML = `🏆 ${winner.name}<br><span class="small-text">${isMGRPaidThisWeek() ? "✅ Recorded" : "❌ Not recorded"}</span>`;
+            document.getElementById("weekInfoAdmin").innerHTML = `Next: ${MEMBERS[(mgrWeekIndex + 1) % MEMBERS.length].name}`;
+        }
+
+        // ============ MEMBER DISPLAY ============
+        function refreshMemberView() {
+            const member = MEMBERS[currentMemberId];
+            const saved = getMemberSavings(currentMemberId);
+            const loanBal = getMemberLoanBalance(currentMemberId);
+            const savingsHistory = getMemberSavingsHistory(currentMemberId);
+            const memberLoans = getMemberLoans(currentMemberId);
+
+            document.getElementById("memberInfoPanel").innerHTML = `<h3>${member.name}</h3><p>📞 ${member.phone || 'No phone'}</p>`;
+            document.getElementById("memberSavingsDisplay").innerHTML = `${saved} KES`;
+            document.getElementById("memberLoanDisplay").innerHTML = `${loanBal} KES`;
+            document.getElementById("savingsHistoryMember").innerHTML = savingsHistory.slice(0, 5).map(s => `📆 ${s.date}: +${s.amount} KES`).join('<br>') || "No savings yet";
+
+            let loanHtml = '';
+            for (let loan of memberLoans) {
+                const outstanding = loan.totalDue - (loan.repaidAmount || 0);
+                loanHtml += `<div class="loan-history-item"><strong>📆 ${loan.dateTaken}</strong><br>Borrowed: ${loan.principal} +10% = ${loan.totalDue} KES<br>Due: ${loan.returnDate}<br>${loan.status === 'returned' ? '✅ Paid' : `⚠️ Pending (${outstanding} KES left)`}</div>`;
+            }
+            document.getElementById("loanHistoryMember").innerHTML = loanHtml || "<p>No loans</p>";
+
+            const isWinner = mgrWeekIndex === currentMemberId;
+            document.getElementById("mgrWinnerMember").innerHTML = `${isWinner ? '🎉 YOU ARE THE WINNER! 🎉' : `Winner: ${MEMBERS[mgrWeekIndex].name}`}<br><span class="small-text">${isMGRPaidThisWeek() ? "Paid this week" : "Not paid yet"}</span>`;
+            document.getElementById("weekInfoMember").innerHTML = `Next winner: ${MEMBERS[(mgrWeekIndex + 1) % MEMBERS.length].name}`;
+        }
+
+        // ============ INITIALIZE ============
+        function initialize() {
+            loadData();
+            const memberSelect = document.getElementById("memberSelect");
+            let options = '<option value="">-- Select Your Name --</option>';
+            for (let m of MEMBERS) options += `<option value="${m.id}">${m.name}</option>`;
+            memberSelect.innerHTML = options;
+        }
+
+        initialize();
     </script>
 </body>
 
