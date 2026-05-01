@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Genz Chama - Working Sync</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            padding: 16px;
+            padding-bottom: 40px;
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 25px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .login-box input,
+        .login-box select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            font-size: 14px;
+        }
+
+        .login-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            background: #1a4d3e;
+            color: white;
+        }
+
+        button {
+            background: #1a4d3e;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        button.secondary {
+            background: #64748b;
+        }
+
+        button.sync {
+            background: #0284c7;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        h1 {
+            color: #1a4d3e;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            border-left: 4px solid #1a4d3e;
+            padding-left: 10px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            font-size: 14px;
+        }
+
+        .member-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .winner {
+            background: #d1fae5;
+            padding: 12px;
+            border-radius: 40px;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .total {
+            text-align: center;
+            margin: 12px 0;
+            padding: 10px;
+            background: #e6f7ed;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+
+        .small-text {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .flex-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-badge {
+            background: #1e40af;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .sync-status {
+            background: #e6f7ed;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .csv-url-box {
+            background: #f0f4f8;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 2px solid #0284c7;
+        }
+
+        .csv-url-box h4 {
+            color: #0284c7;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .success-text {
+            color: #15803d;
+        }
+
+        .error-text {
+            color: #dc2626;
+        }
+
+        .instruction-box {
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 12px;
+            text-align: left;
+            font-size: 11px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <!-- CSV URL Box -->
+            <div class="csv-url-box">
+                <h4>📊 GOOGLE SHEET CSV LINK</h4>
+                <input type="text" id="csvUrl" placeholder="Paste your CSV link here" style="font-size: 12px;">
+                <div class="flex-buttons">
+                    <button onclick="saveCsvUrl()" style="background: #0284c7; padding: 8px;">💾 Save URL</button>
+                    <button onclick="testCsvUrl()" class="secondary" style="padding: 8px;">🔍 Test Link</button>
+                </div>
+                <div id="urlStatus" class="small-text" style="margin-top: 8px;"></div>
+
+            </div>
+
+            <div class="login-tabs">
+                <button class="tab-btn active" onclick="showMemberTab()">👤 Member</button>
+                <button class="tab-btn" onclick="showAdminTab()">👑 Admin</button>
+            </div>
+
+            <div id="memberTab">
+                <h3>Member Login</h3>
+                <select id="memberSelect">
+                    <option value="">-- Select Name --</option>
+                </select>
+                <input type="password" id="memberPin" placeholder="Passcode (last 4 digits of phone)">
+                <button onclick="memberLogin()">Login</button>
+            </div>
+
+            <div id="adminTab" style="display:none">
+                <h3>Admin Login</h3>
+                <input type="password" id="adminPwd" placeholder="Admin password">
+                <button onclick="adminLogin()">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="memberView" style="display:none">
+        <div class="card" style="text-align:center">
+            <h1>💰 Genz Chama</h1>
+            <p>Member Portal</p>
+        </div>
+        <div id="memberInfo" class="card"></div>
+        <div class="card">
+            <h2>🎡 Weekly MGR</h2>
+            <div id="memberMgr" class="winner">Loading...</div>
+        </div>
+        <div class="card">
+            <h2>🏦 My Savings</h2>
+            <div id="memberSavings" style="font-size:28px; font-weight:bold; text-align:center">0 KES</div>
+            <div id="memberSavingsList" class="small-text"></div>
+        </div>
+        <div class="card">
+            <h2>📋 My Loans</h2>
+            <div id="memberLoan" style="font-size:28px; font-weight:bold; text-align:center; color:#dc2626">0 KES</div>
+            <div id="memberLoansList"></div>
+        </div>
+        <button onclick="logout()" class="secondary" style="width:100%">🚪 Logout</button>
+    </div>
+
+    <div id="adminView" style="display:none">
+        <div class="card" style="text-align:center">
+            <span class="admin-badge">👑 ADMIN MODE</span>
+            <h1>💰 Genz Chama</h1>
+        </div>
+
+        <div class="card">
+            <h2>🔄 Sync with Google Sheet</h2>
+            <div id="syncStatus" class="sync-status">📡 Ready to sync</div>
+            <div class="flex-buttons">
+                <button onclick="syncFromSheet()" class="sync">📥 Sync Now</button>
+            </div>
+            <div id="lastSyncInfo" class="small-text" style="margin-top:5px"></div>
+        </div>
+
+        <div class="card">
+            <h2>👥 Members</h2>
+            <div id="membersList"></div><button onclick="addNewMember()" class="secondary small">➕ Add Member</button>
+        </div>
+        <div class="card">
+            <h2>🎡 Weekly MGR</h2>
+            <div id="adminMgr" class="winner">Loading...</div>
+            <div class="flex-buttons"><button onclick="recordMgr()">✅ Record Payout</button><button onclick="nextWeek()"
+                    class="secondary">⏩ Next Week</button></div>
+        </div>
+        <div class="card">
+            <h2>🏦 Add Savings</h2><select id="savingsMember">
+                <option value="">-- Select Member --</option>
+            </select><input type="date" id="savingsDate"><input type="number" id="savingsAmount"
+                placeholder="Amount KES"><button onclick="addSavings()">➕ Add Savings</button>
+        </div>
+        <div class="card">
+            <h2>📋 Loans (10% Interest)</h2><select id="loanMember">
+                <option value="">-- Select Member --</option>
+            </select><input type="date" id="loanDate"><input type="number" id="loanPrincipal"
+                placeholder="Principal KES"><input type="date" id="loanReturnDate"><button onclick="takeLoan()">📥 Take
+                Loan</button>
+            <hr><input type="number" id="repayAmount" placeholder="Repayment"><button onclick="repayLoan()"
+                class="secondary">💰 Repay</button>
+        </div>
+        <div class="card">
+            <h2>📊 Member Summary</h2>
+            <div id="adminSummary"></div>
+            <div class="total">💰 Total Savings: <span id="totalSavings">0</span> KES</div><button
+                onclick="changeAdminPassword()" class="secondary small">🔑 Change Password</button><button
+                onclick="resetAllData()" class="danger small">⚠️ Reset All</button><button onclick="logout()"
+                class="secondary small">🚪 Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Member data
+        let members = [
+            { id: 0, name: "Brian Odhiambo", phone: "0718585462", passcode: "5462" },
+            { id: 1, name: "Calvin Onyango", phone: "0769618871", passcode: "8871" },
+            { id: 2, name: "Collins Odhiambo", phone: "0792257622", passcode: "7622" },
+            { id: 3, name: "Morgan Omondi", phone: "04180238", passcode: "0238" },
+            { id: 4, name: "Samuel Ochieng", phone: "0759856838", passcode: "6838" },
+            { id: 5, name: "Ivy", phone: "0769263349", passcode: "3349" },
+            { id: 6, name: "Ongoma", phone: "0712345678", passcode: "0000" }
+        ];
+
+        let savings = [];
+        let loans = [
+            { id: 1, memberId: 0, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-02-16", status: "returned", dateTaken: "2026-02-11", paid: 550 },
+            { id: 2, memberId: 3, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-03-06", status: "returned", dateTaken: "2026-02-20", paid: 550 },
+            { id: 4, memberId: 3, principal: 500, interest: 50, totalDue: 550, returnDate: "2026-03-22", status: "pending", dateTaken: "2025-03-08", paid: 0 }
+        ];
+
+        let mgrIndex = 0;
+        let mgrLastPaid = null;
+        let adminPassword = "admin123";
+        let nextLoanId = 5;
+        let csvUrl = localStorage.getItem("chamaWorkingCsvUrl") || "";
+
+        let isAdmin = false;
+        let currentMember = null;
+
+        function getWeekKey() {
+            let now = new Date(), year = now.getFullYear(), start = new Date(year, 0, 1);
+            let days = Math.floor((now - start) / 86400000);
+            return `${year}-W${Math.ceil((days + start.getDay() + 1) / 7)}`;
+        }
+        function isMgrPaid() { return mgrLastPaid === getWeekKey(); }
+        function getMemberSavings(id) { return savings.filter(s => s.memberId === id).reduce((a, b) => a + b.amount, 0); }
+        function getMemberLoanBalance(id) { return loans.filter(l => l.memberId === id && l.status !== 'returned').reduce((a, b) => a + (b.totalDue - (b.paid || 0)), 0); }
+        function totalSavings() { return savings.reduce((a, b) => a + b.amount, 0); }
+
+        function saveData() {
+            localStorage.setItem("chamaWorkingData", JSON.stringify({ members, savings, loans, mgrIndex, mgrLastPaid, adminPassword, nextLoanId }));
+        }
+
+        function loadData() {
+            let d = localStorage.getItem("chamaWorkingData");
+            if (d) {
+                try {
+                    let p = JSON.parse(d);
+                    members = p.members || members;
+                    savings = p.savings || savings;
+                    loans = p.loans || loans;
+                    mgrIndex = p.mgrIndex !== undefined ? p.mgrIndex : mgrIndex;
+                    mgrLastPaid = p.mgrLastPaid || null;
+                    if (p.adminPassword) adminPassword = p.adminPassword;
+                    if (p.nextLoanId) nextLoanId = p.nextLoanId;
+                } catch (e) { }
+            }
+            saveData();
+        }
+
+        function saveCsvUrl() {
+            let url = document.getElementById("csvUrl").value.trim();
+            if (url && url.includes("docs.google.com")) {
+                csvUrl = url;
+                localStorage.setItem("chamaWorkingCsvUrl", url);
+                document.getElementById("urlStatus").innerHTML = "✅ URL saved! Tap 'Sync Now' to import data.";
+                document.getElementById("urlStatus").className = "small-text success-text";
+            } else {
+                document.getElementById("urlStatus").innerHTML = "❌ Invalid URL. Must contain 'docs.google.com'";
+                document.getElementById("urlStatus").className = "small-text error-text";
+            }
+        }
+
+        async function testCsvUrl() {
+            let url = document.getElementById("csvUrl").value.trim();
+            if (!url) { alert("Paste CSV link first"); return; }
+            document.getElementById("urlStatus").innerHTML = "🔍 Testing...";
+            try {
+                let response = await fetch(url);
+                if (response.ok) {
+                    let text = await response.text();
+                    let lines = text.split('\n');
+                    document.getElementById("urlStatus").innerHTML = `✅ Link works! Found ${lines.length} lines. Tap 'Sync Now'.`;
+                    document.getElementById("urlStatus").className = "small-text success-text";
+                } else {
+                    throw new Error("HTTP " + response.status);
+                }
+            } catch (error) {
+                document.getElementById("urlStatus").innerHTML = "❌ Failed: " + error.message;
+                document.getElementById("urlStatus").className = "small-text error-text";
+            }
+        }
+
+        async function syncFromSheet() {
+            if (!csvUrl) {
+                alert("Please paste your CSV link and click 'Save URL' first.");
+                return;
+            }
+
+            document.getElementById("syncStatus").innerHTML = "🔄 Fetching from Google Sheet...";
+            document.getElementById("syncStatus").style.background = "#fef3c7";
+
+            try {
+                let response = await fetch(csvUrl);
+                let text = await response.text();
+                let lines = text.split('\n');
+
+                let newSavings = [];
+                let headerSkipped = false;
+
+                for (let line of lines) {
+                    let row = parseCSVLine(line);
+                    if (row.length < 3) continue;
+
+                    // Skip header row (Date, Member Name, Amount)
+                    if (!headerSkipped && (row[0].toLowerCase() === "date" || row[0].toLowerCase() === "date")) {
+                        headerSkipped = true;
+                        continue;
+                    }
+
+                    let date = row[0];
+                    let memberName = row[1];
+                    let amount = parseFloat(row[2]);
+
+                    // Check if this looks like a valid row
+                    if (date && memberName && !isNaN(amount) && amount > 0) {
+                        // Find member ID by name
+                        let memberId = findMemberIdByName(memberName);
+                        if (memberId !== -1) {
+                            // Format date if needed
+                            if (date.includes('/')) {
+                                let parts = date.split('/');
+                                if (parts.length === 3) {
+                                    date = `20${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                                }
+                            }
+                            newSavings.push({ date: date, memberId: memberId, amount: amount });
+                        }
+                    }
+                }
+
+                if (newSavings.length > 0) {
+                    savings = newSavings;
+                    saveData();
+                    document.getElementById("syncStatus").innerHTML = `✅ Success! Imported ${savings.length} savings records.`;
+                    document.getElementById("syncStatus").style.background = "#d1fae5";
+                    document.getElementById("lastSyncInfo").innerHTML = `Last sync: ${new Date().toLocaleString()}`;
+                    refreshAdmin();
+                } else {
+                    document.getElementById("syncStatus").innerHTML = "⚠️ No savings found. Make sure your sheet has: Column A = Date, Column B = Member Name, Column C = Amount";
+                    document.getElementById("syncStatus").style.background = "#fee2e2";
+                }
+
+            } catch (error) {
+                document.getElementById("syncStatus").innerHTML = "❌ Sync failed: " + error.message;
+                document.getElementById("syncStatus").style.background = "#fee2e2";
+            }
+        }
+
+        function findMemberIdByName(name) {
+            if (!name) return -1;
+            let searchName = name.toLowerCase().trim();
+            for (let m of members) {
+                if (m.name.toLowerCase() === searchName) return m.id;
+                if (searchName.includes(m.name.toLowerCase().split(' ')[0])) return m.id;
+                if (m.name.toLowerCase().includes(searchName.split(' ')[0])) return m.id;
+            }
+            return -1;
+        }
+
+        function parseCSVLine(line) {
+            let result = [], inQuote = false, cur = "";
+            for (let i = 0; i < line.length; i++) {
+                let c = line[i];
+                if (c === '"') inQuote = !inQuote;
+                else if (c === ',' && !inQuote) { result.push(cur.trim()); cur = ""; }
+                else cur += c;
+            }
+            result.push(cur.trim());
+            return result;
+        }
+
+        function refreshAdmin() {
+            let opts = '<option value="">-- Select Member --</option>';
+            for (let m of members) opts += `<option value="${m.id}">${m.name}</option>`;
+            document.getElementById("savingsMember").innerHTML = opts;
+            document.getElementById("loanMember").innerHTML = opts;
+
+            let membersHtml = '';
+            for (let m of members) membersHtml += `<div class="member-row"><div><strong>${m.name}</strong><br><span class="small-text">📱 ${m.phone} | 🔑 ${m.passcode}</span></div><button onclick="editMember(${m.id})" class="small secondary">Edit</button></div>`;
+            document.getElementById("membersList").innerHTML = membersHtml;
+
+            let summaryHtml = '';
+            for (let m of members) summaryHtml += `<div class="member-row"><div><strong>${m.name}</strong></div><div>💰 ${getMemberSavings(m.id)} KES<br>📌 ${getMemberLoanBalance(m.id)} KES</div></div>`;
+            document.getElementById("adminSummary").innerHTML = summaryHtml;
+            document.getElementById("totalSavings").innerText = totalSavings();
+
+            let winner = members[mgrIndex]?.name || "?";
+            document.getElementById("adminMgr").innerHTML = `🏆 ${winner}<br><span class="small-text">${isMgrPaid() ? "✅ Recorded" : "❌ Not recorded"}</span>`;
+
+            let loginOpts = '<option value="">-- Select Name --</option>';
+            for (let m of members) loginOpts += `<option value="${m.id}">${m.name}</option>`;
+            document.getElementById("memberSelect").innerHTML = loginOpts;
+        }
+
+        function refreshMemberView() {
+            if (!currentMember) return;
+            let saved = getMemberSavings(currentMember.id);
+            let loanBal = getMemberLoanBalance(currentMember.id);
+            document.getElementById("memberInfo").innerHTML = `<h3>${currentMember.name}</h3><p>📱 ${currentMember.phone}</p>`;
+            document.getElementById("memberSavings").innerHTML = `${saved} KES`;
+            document.getElementById("memberLoan").innerHTML = `${loanBal} KES`;
+            document.getElementById("memberSavingsList").innerHTML = savings.filter(s => s.memberId === currentMember.id).slice(-5).map(s => `📆 ${s.date}: +${s.amount} KES`).join('<br>') || "No savings";
+            document.getElementById("memberLoansList").innerHTML = loans.filter(l => l.memberId === currentMember.id).map(l => `<div style="background:#f8fafc; padding:8px; margin-bottom:6px; border-radius:12px">📆 ${l.dateTaken}<br>${l.principal} + 10% = ${l.totalDue} KES<br>Due: ${l.returnDate}<br>${l.status === 'returned' ? '✅ Paid' : '⚠️ Pending'}</div>`).join('') || "No loans";
+            let isWinner = mgrIndex === currentMember.id;
+            document.getElementById("memberMgr").innerHTML = `${isWinner ? '🎉 YOU ARE THE WINNER! 🎉' : `Winner: ${members[mgrIndex]?.name}`}<br><span class="small-text">${isMgrPaid() ? "Paid" : "Not paid"}</span>`;
+        }
+
+        function editMember(id) {
+            let m = members[id];
+            let newName = prompt("New name:", m.name);
+            let newPhone = prompt("New phone:", m.phone);
+            if (newName) m.name = newName;
+            if (newPhone) { m.phone = newPhone; m.passcode = newPhone.slice(-4); }
+            saveData();
+            refreshAdmin();
+        }
+
+        function addNewMember() {
+            let name = prompt("Member name:");
+            if (!name) return;
+            let phone = prompt("Phone number:");
+            members.push({ id: members.length, name: name, phone: phone || "", passcode: phone ? phone.slice(-4) : "0000" });
+            saveData();
+            refreshAdmin();
+        }
+
+        function addSavings() {
+            let mid = parseInt(document.getElementById("savingsMember").value);
+            let amt = parseFloat(document.getElementById("savingsAmount").value);
+            let date = document.getElementById("savingsDate").value;
+            if (isNaN(mid)) { alert("Select member"); return; }
+            if (isNaN(amt) || amt <= 0) { alert("Valid amount"); return; }
+            if (!date) { alert("Select date"); return; }
+            savings.push({ date, memberId: mid, amount: amt });
+            saveData();
+            refreshAdmin();
+            document.getElementById("savingsAmount").value = "";
+            alert(`✅ Added ${amt} KES`);
+        }
+
+        function takeLoan() {
+            let mid = parseInt(document.getElementById("loanMember").value);
+            let princ = parseFloat(document.getElementById("loanPrincipal").value);
+            let retDate = document.getElementById("loanReturnDate").value;
+            let taken = document.getElementById("loanDate").value;
+            if (isNaN(mid)) { alert("Select member"); return; }
+            if (isNaN(princ) || princ <= 0) { alert("Valid principal"); return; }
+            let interest = princ * 0.10;
+            loans.push({ id: nextLoanId++, memberId: mid, principal: princ, interest: interest, totalDue: princ + interest, returnDate: retDate, status: "pending", dateTaken: taken, paid: 0 });
+            saveData();
+            refreshAdmin();
+            alert(`📥 Loan: ${princ} + 10% = ${princ + interest} KES`);
+            document.getElementById("loanPrincipal").value = "";
+            document.getElementById("loanReturnDate").value = "";
+            document.getElementById("loanDate").value = "";
+        }
+
+        function repayLoan() {
+            let mid = parseInt(document.getElementById("loanMember").value);
+            let amt = parseFloat(document.getElementById("repayAmount").value);
+            if (isNaN(mid)) { alert("Select member"); return; }
+            let pending = loans.filter(l => l.memberId === mid && l.status === "pending");
+            if (pending.length === 0) { alert("No pending loans"); return; }
+            let remaining = amt;
+            for (let l of pending) {
+                let owing = l.totalDue - (l.paid || 0);
+                if (remaining <= 0) break;
+                if (remaining >= owing) { l.paid = l.totalDue; l.status = "returned"; remaining -= owing; }
+                else { l.paid = (l.paid || 0) + remaining; remaining = 0; }
+            }
+            saveData();
+            refreshAdmin();
+            alert(`💰 Repayment of ${amt} KES recorded`);
+            document.getElementById("repayAmount").value = "";
+        }
+
+        function recordMgr() {
+            if (isMgrPaid()) { alert("Already recorded"); return; }
+            mgrLastPaid = getWeekKey();
+            saveData();
+            refreshAdmin();
+            alert(`✅ Recorded 250 KES to ${members[mgrIndex].name}`);
+        }
+
+        function nextWeek() {
+            mgrIndex = (mgrIndex + 1) % members.length;
+            mgrLastPaid = null;
+            saveData();
+            refreshAdmin();
+            alert(`Next winner: ${members[mgrIndex].name}`);
+        }
+
+        function changeAdminPassword() {
+            let np = prompt("New admin password:", adminPassword);
+            if (np && np.length >= 4) { adminPassword = np; saveData(); alert("Password changed!"); }
+        }
+
+        function resetAllData() {
+            if (confirm("⚠️ ERASE ALL DATA?")) { localStorage.removeItem("chamaWorkingData"); location.reload(); }
+        }
+
+        function memberLogin() {
+            let id = parseInt(document.getElementById("memberSelect").value);
+            let pin = document.getElementById("memberPin").value;
+            if (isNaN(id)) { alert("Select name"); return; }
+            if (members[id].passcode === pin) {
+                currentMember = members[id];
+                document.getElementById("loginOverlay").style.display = "none";
+                document.getElementById("memberView").style.display = "block";
+                refreshMemberView();
+            } else alert("Wrong passcode!");
+        }
+
+        function adminLogin() {
+            if (document.getElementById("adminPwd").value === adminPassword) {
+                isAdmin = true;
+                document.getElementById("loginOverlay").style.display = "none";
+                document.getElementById("adminView").style.display = "block";
+                if (csvUrl) document.getElementById("csvUrl").value = csvUrl;
+                refreshAdmin();
+            } else alert("Wrong password!");
+        }
+
+        function logout() {
+            document.getElementById("memberView").style.display = "none";
+            document.getElementById("adminView").style.display = "none";
+            document.getElementById("loginOverlay").style.display = "flex";
+            currentMember = null;
+        }
+
+        function showMemberTab() {
+            document.getElementById("memberTab").style.display = "block";
+            document.getElementById("adminTab").style.display = "none";
+            document.querySelectorAll(".tab-btn")[0].classList.add("active");
+            document.querySelectorAll(".tab-btn")[1].classList.remove("active");
+        }
+
+        function showAdminTab() {
+            document.getElementById("memberTab").style.display = "none";
+            document.getElementById("adminTab").style.display = "block";
+            document.querySelectorAll(".tab-btn")[0].classList.remove("active");
+            document.querySelectorAll(".tab-btn")[1].classList.add("active");
+        }
+
+        loadData();
+        refreshAdmin();
+        if (csvUrl) document.getElementById("csvUrl").value = csvUrl;
+    </script>
+</body>
+
+</html>
